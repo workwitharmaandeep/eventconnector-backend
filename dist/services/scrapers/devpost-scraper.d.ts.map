@@ -1,0 +1,1 @@
+{"version":3,"file":"devpost-scraper.d.ts","sourceRoot":"","sources":["../../../src/services/scrapers/devpost-scraper.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,eAAe,EAAE,MAAM,aAAa,CAAC;AAE9C,qBAAa,cAAc;IACzB,IAAI,SAAa;IAEjB;;;OAGG;IACG,MAAM,IAAI,OAAO,CAAC,eAAe,EAAE,CAAC;IA8D1C,iBAAiB,IAAI,eAAe,EAAE;CAiFvC"}

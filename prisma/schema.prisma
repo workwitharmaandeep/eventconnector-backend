@@ -1,0 +1,165 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ─── Enums ───────────────────────────────────────────────
+
+enum Role {
+  STUDENT
+  ORGANIZER
+  ADMIN
+}
+
+enum EventSource {
+  ORGANIZER
+  UNSTOP
+  DEVPOST
+  OTHER
+}
+
+enum EventType {
+  HACKATHON
+  WORKSHOP
+  FESTIVAL
+  CONFERENCE
+  COMPETITION
+  OTHER
+}
+
+enum EventMode {
+  ONLINE
+  OFFLINE
+  HYBRID
+}
+
+// ─── Models ──────────────────────────────────────────────
+
+model User {
+  id               String        @id @default(uuid())
+  email            String        @unique
+  firebaseUid      String        @unique
+  name             String
+  role             Role          @default(STUDENT)
+  avatarUrl        String?
+  bio              String?
+  skills           String[]      @default([])
+  interests        String[]      @default([])
+  preferredDomains String[]      @default([])
+  latitude         Float?
+  longitude        Float?
+  city             String?
+
+  // Relations
+  events           Event[]       @relation("OrganizerEvents")
+  bookmarks        Bookmark[]
+  views            EventView[]
+  institutions     Institution[]
+
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+model Event {
+  id                   String             @id @default(uuid())
+  title                String
+  description          String?
+  source               EventSource        @default(ORGANIZER)
+  externalUrl          String?
+  externalPlatform     String?
+  eventType            EventType          @default(HACKATHON)
+  mode                 EventMode          @default(OFFLINE)
+  startDate            DateTime
+  endDate              DateTime?
+  registrationDeadline DateTime?
+  venueName            String?
+  venueAddress         String?
+  latitude             Float?
+  longitude            Float?
+  city                 String?
+  state                String?
+  country              String?
+  domains              String[]           @default([])
+  requiredSkills       String[]           @default([])
+  eligibility          Json?
+  registrationUrl      String?
+  websiteUrl           String?
+  bannerImageUrl       String?
+  teamSizeMin          Int?
+  teamSizeMax          Int?
+  prizePool            String?
+  isFeatured           Boolean            @default(false)
+  isApproved           Boolean            @default(true)
+
+  // Relations
+  organizer            User?              @relation("OrganizerEvents", fields: [organizerId], references: [id])
+  organizerId          String?
+  institutions         EventInstitution[]
+  bookmarks            Bookmark[]
+  views                EventView[]
+
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@index([startDate])
+  @@index([eventType])
+  @@index([source])
+  @@index([city])
+  @@index([organizerId])
+}
+
+model Institution {
+  id                String             @id @default(uuid())
+  name              String
+  address           String?
+  latitude          Float
+  longitude         Float
+  city              String?
+  state             String?
+  country           String?
+  websiteUrl        String?
+  campusMapImageUrl String?
+  campusMapMarkers  Json?              // Array of {label, lat, lng, type}
+
+  // Relations
+  events            EventInstitution[]
+  createdBy         User?              @relation(fields: [createdById], references: [id])
+  createdById       String?
+
+  createdAt         DateTime           @default(now())
+}
+
+model EventInstitution {
+  event         Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId       String
+  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  institutionId String
+
+  @@id([eventId, institutionId])
+}
+
+model Bookmark {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId   String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, eventId])
+}
+
+model EventView {
+  id       String   @id @default(uuid())
+  event    Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId  String
+  user     User?    @relation(fields: [userId], references: [id])
+  userId   String?
+  viewedAt DateTime @default(now())
+
+  @@index([eventId])
+}
